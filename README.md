@@ -1,9 +1,9 @@
 # Выгрузка всех игр из личной библиотеки GOG
 
-![Demonstration of running the script](/../../../../dok2d/assets/blob/master/gog-games-downloader-preview.jpg)
-
 У меня за несколько лет использования GOG, накопилось больше ста игр.
 И однажды встал вопрос, как бы их разом сдампить. Залез на страницу, увидел API-вызовы и понеслось)
+
+![Demonstration of running the script](/../../../../dok2d/assets/blob/master/gog-games-downloader-preview.jpg)
 
 ## Требования: jq, curl, wget
 Перед запуском необходимо заполнить в начале скрипта параметры:

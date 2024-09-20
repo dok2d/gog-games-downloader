@@ -1,5 +1,13 @@
 # Выгрузка всех игр из личной библиотеки GOG
 
+<picture>
+    <source media="(prefers-color-scheme: dark)" srcset="/../../../../github/dok2d/assets/blob/master/gog-games-downloader-preview.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="/../../../../github/dok2d/assets/blob/master/gog-games-downloader-preview.jpg">
+    <img
+        alt="Demonstration of running the script"
+        src="/../../../../github/dok2d/assets/blob/master/gog-games-downloader-preview.jpg">
+</picture>
+
 У меня за несколько лет использования GOG, накопилось больше ста игр.
 И однажды встал вопрос, как бы их разом сдампить. Залез на страницу, увидел API-вызовы и понеслось)
 
@@ -9,14 +17,14 @@
 - langs_priority — список языков, которые нужно скачать, в порядке приоритета. Например, deu, eng.
 - outpath — путь, куда будут скачаны игры. Например, /var/www.
 
-Далее, захватываем свою куку с www.gog.com, выглядит она, примерно, так
+Далее, захватываем и сохраняем свою куку с www.gog.com в файл. Выглядит она, примерно, так
 
 ```
 Cookie: csrf=true; gog_lc=RU_RUB_ru-RU; CookieConsent={stamp:%274W2xTRAtatatatatatatata+TRAtata+Nnoasdg==%27%2Cnecessary:true%2Cpreferences:false%2Cstatistics:false%2Cmarketing:false%2Cmethod:%27explicit%27%2Cver:1%2Cutc:749574957495%2Cregion:%27ru%27}; gog_us=OOOOOMoyaOboronaaaa; cart_token=aff749574957495f; gog-al=10O8XXXXXXXXXXXXXX-H3XXXXXXXXXXX-KoXXXXXXXXXXXX_XXXXXXXXXXXXXX-; front_ab=old
 ```
 
 ## Запуск
-`bash get_gog_library cookie_file`
+`bash gog-games-downloader.sh cookie_file`
 
 ### Особенности
 - Поддерживает 16 языков(больше в своей библиотеке не нашёл)

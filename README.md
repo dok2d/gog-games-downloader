@@ -1,12 +1,6 @@
 # Выгрузка всех игр из личной библиотеки GOG
 
-<picture>
-    <source media="(prefers-color-scheme: dark)" srcset="/../../../../github/dok2d/assets/blob/master/gog-games-downloader-preview.jpg">
-    <source media="(prefers-color-scheme: light)" srcset="/../../../../github/dok2d/assets/blob/master/gog-games-downloader-preview.jpg">
-    <img
-        alt="Demonstration of running the script"
-        src="/../../../../github/dok2d/assets/blob/master/gog-games-downloader-preview.jpg">
-</picture>
+![Demonstration of running the script](/../../../../github/dok2d/assets/blob/master/gog-games-downloader-preview.jpg)
 
 У меня за несколько лет использования GOG, накопилось больше ста игр.
 И однажды встал вопрос, как бы их разом сдампить. Залез на страницу, увидел API-вызовы и понеслось)

@@ -31,7 +31,7 @@ Cookie: csrf=true; gog_lc=RU_RUB_ru-RU; CookieConsent={stamp:%274W2xTRAtatatatat
 
 ### Примеры запуска
 
-- `bash gog-games-downloader.sh -o cook_file -p "mac win" -l "fra eng"`
+- `bash gog-games-downloader.sh -o cook_file -p mac win -l fra eng`
 - `bash gog-games-downloader.sh -o cook_file --only-giveawayclaim`
 
 ### Особенности

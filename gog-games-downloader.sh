@@ -166,11 +166,11 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
           target_bytesize="$(getpage ${target_link}.xml | sed -n 's/.*total_size="\([^"]*\)".*/\1/p')"
           outfile_name=$(echo ${target_link} | sed 's/.*\///;s/%[0-9][0-9]//g;s/setup_//g;s/gog_//g;s///g;s/\.exe.*/.exe/g;s/\.bin.*/.bin/g')
           if [ -f "${outdir}/${outfile_name}" ]; then
-            if [ $((${target_bytesize} - $(stat -c %s "${outdir}/${outfile_name}"))) -gt $(df --output=avail . | tail -1) ]; then
+            if [ $((${target_bytesize} - $(stat -c %s "${outdir}/${outfile_name}"))) -gt $(df -B1 --output=avail "${outpath}" | tail -1) ]; then
               echo "Skipping a file that is too large. File size: $(human_readable_filesize ${target_bytesize}). Available disk space:$(df -h --output=avail "${outpath}" | tail -1)"
               continue
             fi
-          elif [ ${target_bytesize} -gt $(df --output=avail . | tail -1) ]; then
+          elif [ ${target_bytesize} -gt $(df -B1 --output=avail "${outpath}" | tail -1) ]; then
             echo "Skipping a file that is too large. File size: $(human_readable_filesize ${target_bytesize}). Available disk space:$(df -h --output=avail "${outpath}" | tail -1)"
             continue
           fi
@@ -179,7 +179,7 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
             echo -n ok
             check_md5 ${target_md5} "${outdir}/${outfile_name}"
           else
-             echo fail
+             echo md5 check fail
           fi
         done
       fi

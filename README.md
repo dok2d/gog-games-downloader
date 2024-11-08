@@ -25,8 +25,8 @@ Cookie: csrf=true; gog_lc=RU_RUB_ru-RU; CookieConsent={stamp:%274W2xTRAtatatatat
 
 - `-c` `--cookie-file` Путь до файла с cookie. Обязательный аргумент.
 - `-o` `--out-path` Путь куда скачивать. Если не указано, то `~/gog-dump`
-- `-p` `--platforms` Под какие ОС скачивать. Доступны lin win mac. Если не указано, то `rus eng`
-- `-l` `--langs-priority` Приоритет выбора языка. Если не указано, то `rus eng`
+- `-p` `--platforms` Под какие ОС скачивать. Доступны lin win mac. Если не указано, то `lin win`. Допустимые значения: lin win mac
+- `-l` `--langs-priority` Приоритет выбора языка. Если не указано, то `rus eng`. Допустимые значения: deu eng spa por tur fra ita pol ron fin swe ces rus zho jpn kor
 - `--only-giveawayclaim` Только проверка бесплатной раздачи и выход
 
 ### Примеры запуска

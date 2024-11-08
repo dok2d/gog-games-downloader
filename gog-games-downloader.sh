@@ -99,7 +99,7 @@ human_readable_filesize() {
 }
 
 [ -z "${cook}" ] && exit_script err "The path to the cookie file is not specified!"
-[ "$(dpkg -l | awk '{print $2}' | grep -c "^jq$")" -ne 1 ] && apt-get --yes install jq
+[ "$(dpkg -l | awk '{print $2}' | grep -c "^jq$")" -ne 1 ] && exit_script err "You need install jq!"
 getpage https://www.gog.com/giveaway/claim | jq -r '.message'
 totalpages="$(getpage "https://www.gog.com/account/getFilteredProducts?hiddenFlag=0&mediaType=1" | jq -r '.totalPages')"
 
@@ -107,6 +107,7 @@ for i in $(seq 1 ${totalpages}); do
   inventory="$(echo -e "${inventory}${inventory:+\n}$(getpage "https://www.gog.com/account/getFilteredProducts?hiddenFlag=0&mediaType=1&page=${i}&sortBy=date_purchased" | jq -r '.products[] | "\(.id) \(.slug) \(.title)"')")"
 done
 
+[ -d "${outpath}" ] || mkdir -p "${outpath}"
 [ -z "${onlygiveawayclaim}" ] && echo -e "Download dir: ${outpath}/ (Available$(df -h --output=avail "${outpath}" | tail -1))"
 echo
 [ "${onlygiveawayclaim}" = "yes" ] && exit_script

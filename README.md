@@ -31,8 +31,8 @@ Cookie: csrf=true; gog_lc=RU_RUB_ru-RU; CookieConsent={stamp:%274W2xTRAtatatatat
 
 ### Примеры запуска
 
-- `bash gog-games-downloader.sh -o cook_file -p mac win -l fra eng`
-- `bash gog-games-downloader.sh -o cook_file --only-giveawayclaim`
+- `bash gog-games-downloader.sh -c cook_file -p mac win -l fra eng`
+- `bash gog-games-downloader.sh -c cook_file --only-giveawayclaim`
 
 ### Особенности
 
@@ -48,3 +48,5 @@ Cookie: csrf=true; gog_lc=RU_RUB_ru-RU; CookieConsent={stamp:%274W2xTRAtatatatat
 ### TODO на будущее
 - Добавить опциональную загрузку дополнительных материалов
 - Добавить проверку ранее скачанной предыдущей версии, если в gog обновили игру
+- Добавить загрузку аддонов
+

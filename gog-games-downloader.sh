@@ -84,7 +84,7 @@ getpage() {
 check_md5() {
   echo -n " [md5:"
   md5sum --quiet -c <(echo "$@") > /dev/null 2>&1
-  [ "$?" = 0 ] && echo "ok]" || echo "not ok]"
+  [ "$?" = 0 ] && echo "ok]" || echo "not ok] FILE: ${outdir}/${outfile_name} URL: ${target_link} (current md5sum:${1})"
 }
 
 human_readable_filesize() {
@@ -180,7 +180,7 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
             echo -n ok
             check_md5 ${target_md5} "${outdir}/${outfile_name}"
           else
-             echo md5 check fail
+             echo not ok
           fi
         done
       fi

@@ -120,7 +120,7 @@ done
 echo
 [ "${onlygiveawayclaim}" = "yes" ] && exit_script
 
-echo -e "${inventory}" | grep -v "^$" | grep -i cyberpunk | while read id slug name; do
+echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
   unset lang_selected
   gameinfo="$(getpage "https://www.gog.com/account/gameDetails/${id}.json")"
   cdkey=$(echo ${gameinfo} | jq -r '.cdKey')

@@ -28,6 +28,8 @@ Cookie: csrf=true; gog_lc=RU_RUB_ru-RU; CookieConsent={stamp:%274W2xTRAtatatatat
 - `-p` `--platforms` Под какие ОС скачивать. Доступны lin win mac. Если не указано, то `lin win`. Допустимые значения: lin win mac
 - `-l` `--langs-priority` Приоритет выбора языка. Если не указано, то `rus eng`. Допустимые значения: deu eng spa por tur fra ita pol ron fin swe ces rus zho jpn kor
 - `--only-giveawayclaim` Только проверка бесплатной раздачи и выход
+- `--no-dlc` Не скачивать DLC, если они имеются
+- `--no-md5` Не проверять скачанные файлы на целостность по md5
 
 ### Примеры запуска
 
@@ -44,9 +46,9 @@ Cookie: csrf=true; gog_lc=RU_RUB_ru-RU; CookieConsent={stamp:%274W2xTRAtatatatat
 - Перед запросом списка игр, curl-запрос на https://www.gog.com/giveaway/claim
 - Сверка md5
 - Пропуск скачивания файла, если на диске недостаточно места
+- Добавить загрузку аддонов
 
 ### TODO на будущее
 - Добавить опциональную загрузку дополнительных материалов
 - Добавить проверку ранее скачанной предыдущей версии, если в gog обновили игру
-- Добавить загрузку аддонов
 

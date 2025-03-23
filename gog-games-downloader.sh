@@ -22,6 +22,8 @@ Options:
   -p œ© --platforms œ© [TYPE] œ© Select platforms. Default: lin win
   -l œ© --langs-priority œ© [LANG] œ© List of languages to download, in order of priority. Default: rus eng
      œ© --only-giveawayclaim œ©  œ© Check giveaway claim and exit
+     œ© --no-dlc œ©  œ© Disable DLC download
+     œ© --no-md5 œ©  œ© Disable MD5-check
 
 Available arguments
 Platform types: lin win mac
@@ -66,6 +68,12 @@ while [ ! -z "${1}" ]; do
       shift;;
     --only-giveawayclaim)
       onlygiveawayclaim=yes
+      shift;;
+    --no-dlc)
+      dlc_disable=yes
+      shift;;
+    --no-md5)
+      md5_disable=yes
       shift;;
     -h|--help) exit_script info "${t_help}" ;;
     *) exit_script info "Error flag - ${1}\n\n${t_help}" ;;
@@ -112,7 +120,7 @@ done
 echo
 [ "${onlygiveawayclaim}" = "yes" ] && exit_script
 
-echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
+echo -e "${inventory}" | grep -v "^$" | grep -i cyberpunk | while read id slug name; do
   unset lang_selected
   gameinfo="$(getpage "https://www.gog.com/account/gameDetails/${id}.json")"
   cdkey=$(echo ${gameinfo} | jq -r '.cdKey')
@@ -154,6 +162,9 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
       [ "${os:0:1}" = m ] && os_type=mac
       if [[ "${platform_available}" == *${os_type}* ]]; then
         files_links=$(echo ${gameinfo} | jq -r '.downloads[] | select(.[0]=="'${lang_selected}'") | .[1] | .'${os_type}'[] | .manualUrl' | grep installer[0-9])
+        if [ -z "${dlc_disable}" -a -n "$(echo ${gameinfo} | jq -r '.dlcs[] | .downloads[] | select(.[0]=="'${lang_selected}'")')" ]; then
+          files_links="${files_links[@]} $(echo ${gameinfo} | jq -r '.dlcs[] | .downloads[] | select(.[0]=="'${lang_selected}'") | .[1] | .'${os_type}'[] | .manualUrl' | grep installer[0-9])"
+        fi
         files_count=$(echo -e "${files_links}" | wc -l)
         [ "${files_count}" -eq 1 ] && outdir=${outpath}/${os} || outdir=${outpath}/${os}/${slug}
         mkdir -p "${outdir}"
@@ -163,7 +174,7 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
           count_download=$((count_download+1))
           echo -n "${name} [${os}] (${count_download}/${files_count}).. "
           target_link=$(curl -sILH "${cook}" --write-out '%{url_effective}' --output /dev/null https://www.gog.com${i})
-          target_md5="$(getpage ${target_link}.xml | sed -n 's/.*md5="\([^"]*\)".*/\1/p')"
+          [ -z "${md5_disable}" ] && target_md5="$(getpage ${target_link}.xml | sed -n 's/.*md5="\([^"]*\)".*/\1/p')"
           target_bytesize="$(getpage ${target_link}.xml | sed -n 's/.*total_size="\([^"]*\)".*/\1/p')"
           outfile_name=$(echo ${target_link} | sed 's/.*\///;s/%[0-9][0-9]//g;s/setup_//g;s/gog_//g;s///g;s/\.exe.*/.exe/g;s/\.bin.*/.bin/g')
           if [ -f "${outdir}/${outfile_name}" ]; then
@@ -178,7 +189,7 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
           wget ${target_link} -qcO "${outdir}/${outfile_name}"
           if [ "$?" = 0 ]; then
             echo -n ok
-            check_md5 ${target_md5} "${outdir}/${outfile_name}"
+            [ -n "${md5_disable}" ] && echo || check_md5 ${target_md5} "${outdir}/${outfile_name}"
           else
              echo not ok
           fi

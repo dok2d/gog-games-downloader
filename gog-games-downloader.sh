@@ -24,6 +24,8 @@ Options:
      œ© --only-giveawayclaim œ©  œ© Check giveaway claim and exit
      œ© --no-dlc œ©  œ© Disable DLC download
      œ© --no-md5 œ©  œ© Disable MD5-check
+     œ© --extras œ©  œ© Download bonus materials (soundtracks, artbooks, etc.)
+     œ© --check-updates œ©  œ© Re-download files if GOG updated the game
 
 Available arguments
 Platform types: lin win mac
@@ -75,6 +77,12 @@ while [ ! -z "${1}" ]; do
     --no-md5)
       md5_disable=yes
       shift;;
+    --extras)
+      extras_enable=yes
+      shift;;
+    --check-updates)
+      check_updates=yes
+      shift;;
     -h|--help) exit_script info "${t_help}" ;;
     *) exit_script info "Error flag - ${1}\n\n${t_help}" ;;
   esac
@@ -104,6 +112,21 @@ human_readable_filesize() {
         i=$(( i + 1 ))
     done
     printf "%.1f %s\n" "$bytes" "${units[i]}"
+}
+
+save_md5_manifest() {
+    local file_path=$1
+    local md5=$2
+    local manifest_file="${outpath}/.gog-md5-manifest"
+    grep -v "^${file_path}|" "${manifest_file}" 2>/dev/null > "${manifest_file}.tmp" || true
+    echo "${file_path}|${md5}" >> "${manifest_file}.tmp"
+    mv "${manifest_file}.tmp" "${manifest_file}"
+}
+
+get_saved_md5() {
+    local file_path=$1
+    local manifest_file="${outpath}/.gog-md5-manifest"
+    grep "^${file_path}|" "${manifest_file}" 2>/dev/null | cut -d'|' -f2
 }
 
 [ -z "${cook}" ] && exit_script err "The path to the cookie file is not specified!"
@@ -178,6 +201,15 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
           target_bytesize="$(getpage ${target_link}.xml | sed -n 's/.*total_size="\([^"]*\)".*/\1/p')"
           outfile_name=$(echo ${target_link} | sed 's/.*\///;s/%[0-9][0-9]//g;s/setup_//g;s/gog_//g;s///g;s/\.exe.*/.exe/g;s/\.bin.*/.bin/g')
           if [ -f "${outdir}/${outfile_name}" ]; then
+            if [ -n "${check_updates}" -a -z "${md5_disable}" ]; then
+              saved_md5=$(get_saved_md5 "${outdir}/${outfile_name}")
+              if [ -n "${saved_md5}" -a -n "${target_md5}" -a "${saved_md5}" != "${target_md5}" ]; then
+                echo -n "(update found) "
+                rm -f "${outdir}/${outfile_name}"
+              fi
+            fi
+          fi
+          if [ -f "${outdir}/${outfile_name}" ]; then
             if [ $((${target_bytesize} - $(stat -c %s "${outdir}/${outfile_name}"))) -gt $(df -B1 --output=avail "${outpath}" | tail -1) ]; then
               echo "Skipping a file that is too large. File size: $(human_readable_filesize ${target_bytesize}). Available disk space:$(df -h --output=avail "${outpath}" | tail -1)"
               continue
@@ -189,13 +221,44 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
           wget ${target_link} -qcO "${outdir}/${outfile_name}"
           if [ "$?" = 0 ]; then
             echo -n ok
-            [ -n "${md5_disable}" ] && echo || check_md5 ${target_md5} "${outdir}/${outfile_name}"
+            if [ -z "${md5_disable}" ]; then
+              check_md5 ${target_md5} "${outdir}/${outfile_name}"
+              save_md5_manifest "${outdir}/${outfile_name}" "${target_md5}"
+            else
+              echo
+            fi
           else
              echo not ok
           fi
         done
       fi
     done
+    if [ -n "${extras_enable}" ]; then
+      extras_links=$(echo ${gameinfo} | jq -r '.extras[]? | .manualUrl' 2>/dev/null)
+      if [ -n "${extras_links}" ]; then
+        extras_count=$(echo -e "${extras_links}" | wc -l)
+        extras_dir="${outpath}/extras/${slug}"
+        mkdir -p "${extras_dir}"
+        unset count_extras
+        for i in ${extras_links}; do
+          count_extras=$((count_extras+1))
+          echo -n "${name} [extras] (${count_extras}/${extras_count}).. "
+          target_link=$(curl -sILH "${cook}" --write-out '%{url_effective}' --output /dev/null https://www.gog.com${i})
+          outfile_name=$(echo ${target_link} | sed 's/.*\///;s/%[0-9][0-9]//g')
+          target_bytesize="$(curl -sILH "${cook}" "${target_link}" | grep -i content-length | tail -1 | tr -d '[:space:]' | cut -d: -f2)"
+          if [ -f "${extras_dir}/${outfile_name}" ]; then
+            echo "already downloaded"
+            continue
+          fi
+          if [ -n "${target_bytesize}" ] && [ ${target_bytesize} -gt $(df -B1 --output=avail "${outpath}" | tail -1) ]; then
+            echo "Skipping a file that is too large. File size: $(human_readable_filesize ${target_bytesize}). Available disk space:$(df -h --output=avail "${outpath}" | tail -1)"
+            continue
+          fi
+          wget ${target_link} -qcO "${extras_dir}/${outfile_name}"
+          [ "$?" = 0 ] && echo "ok" || echo "not ok"
+        done
+      fi
+    fi
   else
     echo ${name} is not available in languages ${langs_priority}!
   fi

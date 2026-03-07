@@ -114,19 +114,20 @@ human_readable_filesize() {
     printf "%.1f %s\n" "$bytes" "${units[i]}"
 }
 
-save_md5_manifest() {
-    local file_path=$1
+save_manifest() {
+    local manual_url=$1
     local md5=$2
+    local file_path=$3
     local manifest_file="${outpath}/.gog-md5-manifest"
-    grep -v "^${file_path}|" "${manifest_file}" 2>/dev/null > "${manifest_file}.tmp" || true
-    echo "${file_path}|${md5}" >> "${manifest_file}.tmp"
+    grep -v "^${manual_url}|" "${manifest_file}" 2>/dev/null > "${manifest_file}.tmp" || true
+    echo "${manual_url}|${md5}|${file_path}" >> "${manifest_file}.tmp"
     mv "${manifest_file}.tmp" "${manifest_file}"
 }
 
-get_saved_md5() {
-    local file_path=$1
+get_manifest_entry() {
+    local manual_url=$1
     local manifest_file="${outpath}/.gog-md5-manifest"
-    grep "^${file_path}|" "${manifest_file}" 2>/dev/null | cut -d'|' -f2
+    grep "^${manual_url}|" "${manifest_file}" 2>/dev/null
 }
 
 [ -z "${cook}" ] && exit_script err "The path to the cookie file is not specified!"
@@ -200,12 +201,15 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
           [ -z "${md5_disable}" ] && target_md5="$(getpage ${target_link}.xml | sed -n 's/.*md5="\([^"]*\)".*/\1/p')"
           target_bytesize="$(getpage ${target_link}.xml | sed -n 's/.*total_size="\([^"]*\)".*/\1/p')"
           outfile_name=$(echo ${target_link} | sed 's/.*\///;s/%[0-9][0-9]//g;s/setup_//g;s/gog_//g;s///g;s/\.exe.*/.exe/g;s/\.bin.*/.bin/g')
-          if [ -f "${outdir}/${outfile_name}" ]; then
-            if [ -n "${check_updates}" -a -z "${md5_disable}" ]; then
-              saved_md5=$(get_saved_md5 "${outdir}/${outfile_name}")
+          if [ -n "${check_updates}" -a -z "${md5_disable}" ]; then
+            manifest_entry=$(get_manifest_entry "${i}")
+            if [ -n "${manifest_entry}" ]; then
+              saved_md5=$(echo "${manifest_entry}" | cut -d'|' -f2)
+              saved_file=$(echo "${manifest_entry}" | cut -d'|' -f3)
               if [ -n "${saved_md5}" -a -n "${target_md5}" -a "${saved_md5}" != "${target_md5}" ]; then
                 echo -n "(update found) "
-                rm -f "${outdir}/${outfile_name}"
+                [ -f "${saved_file}" ] && rm -f "${saved_file}"
+                [ "${saved_file}" != "${outdir}/${outfile_name}" -a -f "${outdir}/${outfile_name}" ] && rm -f "${outdir}/${outfile_name}"
               fi
             fi
           fi
@@ -223,7 +227,7 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
             echo -n ok
             if [ -z "${md5_disable}" ]; then
               check_md5 ${target_md5} "${outdir}/${outfile_name}"
-              save_md5_manifest "${outdir}/${outfile_name}" "${target_md5}"
+              save_manifest "${i}" "${target_md5}" "${outdir}/${outfile_name}"
             else
               echo
             fi

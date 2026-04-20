@@ -1,54 +1,57 @@
-# Выгрузка всех игр из личной библиотеки GOG
+# GOG Personal Library Downloader
 
-С течением лет на платформе GOG у меня накопилось более ста игр, и однажды возник вопрос — как бы разом сдампить их все?
-Просмотрев API-вызовы на сайте, я решил создать скрипт для автоматизации этого процесса.
+Over the years I accumulated over a hundred games on GOG, and one day the question arose — how to dump them all at once?
+After inspecting the API calls on the site, I created this script to automate the process.
 
 ![Demonstration of running the script](/../../../../dok2d/assets/blob/master/gog-games-downloader-preview.jpg)
 
-## Требования: jq, curl, wget
+## Requirements: jq, curl, wget
 
-Перед запуском необходимо захватить и сохранить свою куку с www.gog.com в файл. Выглядит она, примерно, так
+Before running, you need to capture and save your cookie from www.gog.com into a file. It looks roughly like this:
 
 ```
 Cookie: csrf=true; gog_lc=RU_RUB_ru-RU; CookieConsent={stamp:%274W2xTRAtatatatatatatata+TRAtata+Nnoasdg==%27%2Cnecessary:true%2Cpreferences:false%2Cstatistics:false%2Cmarketing:false%2Cmethod:%27explicit%27%2Cver:1%2Cutc:749574957495%2Cregion:%27ru%27}; gog_us=OOOOOMoyaOboronaaaa; cart_token=aff749574957495f; gog-al=10O8XXXXXXXXXXXXXX-H3XXXXXXXXXXX-KoXXXXXXXXXXXX_XXXXXXXXXXXXXX-; front_ab=old
 ```
 
-Для её получения можно использовать инспекцию страницы gog.com.
-Вкладка Network, фильтр domain:api.gog.com и отмечаем XHR. Обновляем страницу.
-Из контекстного меню любого появившегося пакета -> "Copy as cURL" и там уже находим нужное поле.
+To obtain it, use the browser developer tools on gog.com.
+Open the Network tab, filter by domain:api.gog.com and check XHR. Reload the page.
+Right-click any request that appears → "Copy as cURL", then find the Cookie field in the copied command.
 
-## Запуск
+## Usage
 
-`bash gog-games-downloader.sh -с cookie_file`
+`bash gog-games-downloader.sh -c cookie_file`
 
-### Дополнительные аргументы
+### Arguments
 
-- `-c` `--cookie-file` Путь до файла с cookie. Обязательный аргумент.
-- `-o` `--out-path` Путь куда скачивать. Если не указано, то `~/gog-dump`
-- `-p` `--platforms` Под какие ОС скачивать. Доступны lin win mac. Если не указано, то `lin win`. Допустимые значения: lin win mac
-- `-l` `--langs-priority` Приоритет выбора языка. Если не указано, то `rus eng`. Допустимые значения: deu eng spa por tur fra ita pol ron fin swe ces rus zho jpn kor
-- `--only-giveawayclaim` Только проверка бесплатной раздачи и выход
-- `--no-dlc` Не скачивать DLC, если они имеются
-- `--no-md5` Не проверять скачанные файлы на целостность по md5
+- `-c` `--cookie-file` Path to the cookie file. Required.
+- `-o` `--out-path` Download destination path. Defaults to `~/gog-dump`.
+- `-p` `--platforms` Target OS platforms. Defaults to `lin win`. Allowed values: `lin win mac`
+- `-l` `--langs-priority` Language priority. Defaults to `rus eng`. Allowed values: `deu eng spa por tur fra ita pol ron fin swe ces rus zho jpn kor`
+- `--only-giveawayclaim` Only check for the free giveaway and exit.
+- `--no-dlc` Skip DLC downloads.
+- `--no-md5` Skip MD5 integrity checks on downloaded files.
 
-### Примеры запуска
+### Examples
 
 - `bash gog-games-downloader.sh -c cook_file -p mac win -l fra eng`
 - `bash gog-games-downloader.sh -c cook_file --only-giveawayclaim`
 
-### Особенности
+### Features
 
-- Поддерживает 16 языков(больше в своей библиотеке не нашёл)
-- Скачает только первый найденный язык по указанным приоритетам
-- Если файл игры уже был скачан, то его скипнет
-- Если установщик игры составляет более одного файла, то кладёт в отдельную директорию
-- Если выдаётся cd-key игры, то он скачается тоже
-- Перед запросом списка игр, curl-запрос на https://www.gog.com/giveaway/claim
-- Сверка md5
-- Пропуск скачивания файла, если на диске недостаточно места
-- Загрузка аддонов(DLC)
+- Supports 16 languages
+- Downloads only the first matching language according to the specified priority
+- Skips files that have already been downloaded
+- Places multi-part game installers into a separate subdirectory
+- Downloads CD keys if provided for a game
+- Sends a request to https://www.gog.com/giveaway/claim before fetching the game list
+- MD5 integrity verification
+- Skips download if there is not enough disk space
+- Downloads DLC add-ons
 
-### TODO на будущее
-- Опциональная загрузка дополнительных материалов
-- Проверка ранее скачанной предыдущей версии, если в gog обновили игру
+### TODO
+- Optional download of bonus materials
+- Check previously downloaded versions when GOG updates a game
 
+---
+
+[Русская версия / Russian version](README.ru.md)

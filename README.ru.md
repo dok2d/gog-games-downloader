@@ -3,7 +3,7 @@
 С течением лет на платформе GOG у меня накопилось более ста игр, и однажды возник вопрос — как бы разом сдампить их все?
 Просмотрев API-вызовы на сайте, я решил создать скрипт для автоматизации этого процесса.
 
-![Demonstration of running the script](/../../../../dok2d/assets/blob/master/gog-games-downloader-preview.jpg)
+![Demonstration of running the script](https://github.com/dok2d/assets/blob/master/gog-games-downloader-preview.jpg)
 
 ## Требования: jq, curl, wget
 

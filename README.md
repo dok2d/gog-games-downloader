@@ -3,7 +3,7 @@
 Over the years I accumulated over a hundred games on GOG, and one day the question arose — how to dump them all at once?
 After inspecting the API calls on the site, I created this script to automate the process.
 
-![Demonstration of running the script](/../../../../dok2d/assets/blob/master/gog-games-downloader-preview.jpg)
+![Demonstration of running the script](https://github.com/dok2d/assets/blob/master/gog-games-downloader-preview.jpg)
 
 ## Requirements: jq, curl, wget
 

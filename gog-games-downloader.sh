@@ -193,7 +193,9 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
         [ "${files_count}" -eq 1 ] && outdir=${outpath}/${os} || outdir=${outpath}/${os}/${slug}
         mkdir -p "${outdir}"
         [ -n "${cdkey}" ] && echo ${cdkey} > "${outdir}/${slug}.cdkey"
-        unset count_download
+        unset count_download staging_mode all_staging_ok
+        all_staging_ok=yes
+        staging_info=$(mktemp)
         for i in ${files_links}; do
           count_download=$((count_download+1))
           echo -n "${name} [${os}] (${count_download}/${files_count}).. "
@@ -201,40 +203,82 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
           [ -z "${md5_disable}" ] && target_md5="$(getpage ${target_link}.xml | sed -n 's/.*md5="\([^"]*\)".*/\1/p')"
           target_bytesize="$(getpage ${target_link}.xml | sed -n 's/.*total_size="\([^"]*\)".*/\1/p')"
           outfile_name=$(echo ${target_link} | sed 's/.*\///;s/%[0-9][0-9]//g;s/setup_//g;s/gog_//g;s///g;s/\.exe.*/.exe/g;s/\.bin.*/.bin/g')
+          download_dir="${outdir}"
+          use_staging=""
           if [ -n "${check_updates}" -a -z "${md5_disable}" ]; then
             manifest_entry=$(get_manifest_entry "${i}")
             if [ -n "${manifest_entry}" ]; then
               saved_md5=$(echo "${manifest_entry}" | cut -d'|' -f2)
               saved_file=$(echo "${manifest_entry}" | cut -d'|' -f3)
-              if [ -n "${saved_md5}" -a -n "${target_md5}" -a "${saved_md5}" != "${target_md5}" ]; then
+              saved_name=$(basename "${saved_file}")
+              if [ "${saved_name}" != "${outfile_name}" ]; then
+                download_dir="${outdir}/new"
+                mkdir -p "${download_dir}"
+                staging_mode=yes
+                use_staging=yes
+                echo -n "(update: ${saved_name} -> ${outfile_name}) "
+              elif [ -n "${saved_md5}" -a -n "${target_md5}" -a "${saved_md5}" != "${target_md5}" ]; then
                 echo -n "(update found) "
-                [ -f "${saved_file}" ] && rm -f "${saved_file}"
-                [ "${saved_file}" != "${outdir}/${outfile_name}" -a -f "${outdir}/${outfile_name}" ] && rm -f "${outdir}/${outfile_name}"
+                rm -f "${outdir}/${outfile_name}"
               fi
             fi
           fi
-          if [ -f "${outdir}/${outfile_name}" ]; then
-            if [ $((${target_bytesize} - $(stat -c %s "${outdir}/${outfile_name}"))) -gt $(df -B1 --output=avail "${outpath}" | tail -1) ]; then
+          if [ -f "${download_dir}/${outfile_name}" ]; then
+            if [ $((${target_bytesize} - $(stat -c %s "${download_dir}/${outfile_name}"))) -gt $(df -B1 --output=avail "${outpath}" | tail -1) ]; then
               echo "Skipping a file that is too large. File size: $(human_readable_filesize ${target_bytesize}). Available disk space:$(df -h --output=avail "${outpath}" | tail -1)"
+              [ -n "${use_staging}" ] && all_staging_ok=""
               continue
             fi
           elif [ ${target_bytesize} -gt $(df -B1 --output=avail "${outpath}" | tail -1) ]; then
             echo "Skipping a file that is too large. File size: $(human_readable_filesize ${target_bytesize}). Available disk space:$(df -h --output=avail "${outpath}" | tail -1)"
+            [ -n "${use_staging}" ] && all_staging_ok=""
             continue
           fi
-          wget ${target_link} -qcO "${outdir}/${outfile_name}"
+          wget ${target_link} -qcO "${download_dir}/${outfile_name}"
           if [ "$?" = 0 ]; then
             echo -n ok
-            if [ -z "${md5_disable}" ]; then
-              check_md5 ${target_md5} "${outdir}/${outfile_name}"
-              save_manifest "${i}" "${target_md5}" "${outdir}/${outfile_name}"
+            if [ -n "${use_staging}" ]; then
+              if [ -z "${md5_disable}" ]; then
+                echo -n " [md5:"
+                if md5sum --quiet -c <(echo "${target_md5} ${download_dir}/${outfile_name}") > /dev/null 2>&1; then
+                  echo "ok]"
+                  echo "${i}|${target_md5}|${outfile_name}" >> "${staging_info}"
+                else
+                  echo "not ok]"
+                  all_staging_ok=""
+                fi
+              else
+                echo
+                echo "${i}||${outfile_name}" >> "${staging_info}"
+              fi
             else
-              echo
+              if [ -z "${md5_disable}" ]; then
+                check_md5 ${target_md5} "${download_dir}/${outfile_name}"
+                save_manifest "${i}" "${target_md5}" "${outdir}/${outfile_name}"
+              else
+                echo
+              fi
             fi
           else
              echo not ok
+             [ -n "${use_staging}" ] && all_staging_ok=""
           fi
         done
+        if [ -n "${staging_mode}" -a -n "${all_staging_ok}" ]; then
+          while IFS='|' read mu md5 fname; do
+            me=$(get_manifest_entry "${mu}")
+            if [ -n "${me}" ]; then
+              sf=$(echo "${me}" | cut -d'|' -f3)
+              [ -f "${sf}" ] && rm -f "${sf}"
+            fi
+            mv "${outdir}/new/${fname}" "${outdir}/${fname}"
+            save_manifest "${mu}" "${md5}" "${outdir}/${fname}"
+          done < "${staging_info}"
+          rmdir "${outdir}/new" 2>/dev/null
+        elif [ -n "${staging_mode}" ]; then
+          echo "Update incomplete. Staged files kept in ${outdir}/new/ for resume."
+        fi
+        rm -f "${staging_info}"
       fi
     done
     if [ -n "${extras_enable}" ]; then

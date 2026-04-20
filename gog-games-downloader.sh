@@ -127,7 +127,7 @@ save_manifest() {
 get_manifest_entry() {
     local manual_url=$1
     local manifest_file="${outpath}/.gog-md5-manifest"
-    grep "^${manual_url}|" "${manifest_file}" 2>/dev/null || true
+    grep "^${manual_url}|" "${manifest_file}"
 }
 
 [ -z "${cook}" ] && exit_script err "The path to the cookie file is not specified!"
@@ -140,6 +140,7 @@ for i in $(seq 1 ${totalpages}); do
 done
 
 [ -d "${outpath}" ] || mkdir -p "${outpath}"
+[ -f "${outpath}/.gog-md5-manifest" ] || touch "${outpath}/.gog-md5-manifest"
 [ -z "${onlygiveawayclaim}" ] && echo -e "Download dir: ${outpath}/ (Available$(df -h --output=avail "${outpath}" | tail -1))"
 echo
 [ "${onlygiveawayclaim}" = "yes" ] && exit_script
@@ -206,8 +207,7 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
           download_dir="${outdir}"
           use_staging=""
           if [ -n "${check_updates}" -a -z "${md5_disable}" ]; then
-            manifest_entry=$(get_manifest_entry "${i}")
-            if [ -n "${manifest_entry}" ]; then
+            if manifest_entry=$(get_manifest_entry "${i}"); then
               saved_md5=$(echo "${manifest_entry}" | cut -d'|' -f2)
               saved_file=$(echo "${manifest_entry}" | cut -d'|' -f3)
               saved_name=$(basename "${saved_file}")

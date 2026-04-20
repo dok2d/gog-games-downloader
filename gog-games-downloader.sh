@@ -127,7 +127,7 @@ save_manifest() {
 get_manifest_entry() {
     local manual_url=$1
     local manifest_file="${outpath}/.gog-md5-manifest"
-    grep "^${manual_url}|" "${manifest_file}" 2>/dev/null
+    grep "^${manual_url}|" "${manifest_file}" 2>/dev/null || true
 }
 
 [ -z "${cook}" ] && exit_script err "The path to the cookie file is not specified!"

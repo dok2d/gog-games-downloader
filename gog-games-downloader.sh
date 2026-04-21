@@ -206,9 +206,8 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
           outfile_name=$(echo ${target_link} | sed 's/.*\///;s/%[0-9][0-9]//g;s/setup_//g;s/gog_//g;s///g;s/\.exe.*/.exe/g;s/\.bin.*/.bin/g')
           download_dir="${outdir}"
           use_staging=""
-          if [ -n "${check_updates}" -a -z "${md5_disable}" ]; then
+          if [ -n "${check_updates}" ]; then
             if manifest_entry=$(get_manifest_entry "${i}"); then
-              saved_md5=$(echo "${manifest_entry}" | cut -d'|' -f2)
               saved_file=$(echo "${manifest_entry}" | cut -d'|' -f3)
               saved_name=$(basename "${saved_file}")
               if [ "${saved_name}" != "${outfile_name}" ]; then
@@ -217,7 +216,7 @@ echo -e "${inventory}" | grep -v "^$" | while read id slug name; do
                 staging_mode=yes
                 use_staging=yes
                 echo -n "(update: ${saved_name} -> ${outfile_name}) "
-              elif [ -n "${saved_md5}" -a -n "${target_md5}" -a "${saved_md5}" != "${target_md5}" ]; then
+              elif [ -f "${outdir}/${outfile_name}" ] && [ "$(stat -c %s "${outdir}/${outfile_name}")" != "${target_bytesize}" ]; then
                 echo -n "(update found) "
                 rm -f "${outdir}/${outfile_name}"
               fi
